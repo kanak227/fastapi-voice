@@ -10,7 +10,6 @@ class UserBase(BaseModel):
     email: EmailStr
     profile_picture: str
 
-
 class UserCreate(UserBase):
     """Schema used when creating a new user"""
 
