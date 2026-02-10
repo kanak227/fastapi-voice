@@ -113,6 +113,7 @@
           <input id="sessionId" placeholder="(auto from /sessions)"/>
         </div>
         <div class="btnbar" style="align-self:flex-end;">
+          <button onclick="runTestSuite()">Run test suite</button>
           <button class="secondary" id="btnClear">Clear output</button>
           <button class="secondary" id="btnCopyLastCurl">Copy last curl</button>
         </div>
@@ -193,6 +194,7 @@
               <button onclick="callApi('GET','/voice/voices')">GET /voice/voices</button>
               <button onclick="callJson('POST','/voice/synthesize', getJson('voiceSynthesize'))">POST /voice/synthesize</button>
               <button class="secondary" onclick="callJson('POST','/voice/transcribe', getJson('voiceTranscribe'))">POST /voice/transcribe</button>
+              <button class="secondary" onclick="fillSilentAudioB64()">Fill silent audio_b64</button>
             </div>
 
             <label class="hint" for="voiceSynthesize">Body for /voice/synthesize</label>
@@ -385,6 +387,69 @@
       log(`curl: ${lastCurl}`);
     }
   });
+
+  function base64FromBytes(bytes) {
+    let binary = '';
+    const chunkSize = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, i + chunkSize);
+      binary += String.fromCharCode(...chunk);
+    }
+    return btoa(binary);
+  }
+
+  function generateSilentPcm16Base64(sampleRateHz, durationMs) {
+    const frames = Math.max(1, Math.floor((sampleRateHz * durationMs) / 1000));
+    const bytes = new Uint8Array(frames * 2); // PCM16 mono, silence = zeros
+    return base64FromBytes(bytes);
+  }
+
+  function fillSilentAudioB64() {
+    try {
+      const body = getJson('voiceTranscribe');
+      const sr = body?.audio?.sample_rate_hz || 16000;
+      body.audio = body.audio || { sample_rate_hz: sr };
+      body.audio.sample_rate_hz = sr;
+      body.audio.audio_b64 = generateSilentPcm16Base64(sr, 250);
+      document.getElementById('voiceTranscribe').value = JSON.stringify(body);
+      log('Filled voiceTranscribe.audio.audio_b64 with 250ms silence.');
+    } catch (e) {
+      log(`ERROR: ${e.message || e}`);
+    }
+  }
+
+  async function runTestSuite() {
+    log(`\n[${now()}] Running UI test suite...`);
+    try {
+      await callApi('GET','/health');
+      await callApi('GET','/status');
+      await callApi('GET','/metrics');
+
+      await callApi('GET','/llm/health');
+      await callApi('GET','/llm/models');
+      await callJson('POST','/llm/generate', getJson('llmGenerate'));
+
+      await createSession();
+      await addMessage();
+      await listMessages();
+
+      await callJson('POST','/interactions', getJson('interactionsBody'));
+
+      await callApi('GET','/voice/health');
+      await callApi('GET','/voice/voices');
+      await callJson('POST','/voice/synthesize', getJson('voiceSynthesize'));
+
+      // Make transcribe runnable by ensuring a valid base64 payload.
+      fillSilentAudioB64();
+      await callJson('POST','/voice/transcribe', getJson('voiceTranscribe'));
+
+      await callJson('POST','/transcripts/normalize', getJson('normalizeBody'));
+
+      log(`[${now()}] UI test suite complete.`);
+    } catch (e) {
+      log(`ERROR: ${e.message || e}`);
+    }
+  }
 </script>
 </body>
 </html>
