@@ -37,7 +37,9 @@ class DocumentService:
             else:
                 raise ValueError(f"Unsupported file extension: {ext}")
         except Exception as e:
-            extracted_text = f"Error extracting text: {str(e)}"
+            # Propagate extraction errors so callers can handle them explicitly,
+            # instead of treating error messages as extracted content.
+            raise RuntimeError(f"Error extracting text: {e}") from e
 
         # 3. Clean and save extracted text
         cleaned_text = self._clean_text(extracted_text)
