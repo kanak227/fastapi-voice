@@ -1,8 +1,8 @@
-from __future__ import annotations
-
 from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel, Field
+
 
 
 class SessionCreateResponse(BaseModel):
@@ -29,3 +29,10 @@ class SessionMessagesResponse(BaseModel):
 class SessionAddMessageRequest(BaseModel):
     role: str = Field(..., description="user|assistant|system")
     content: str = Field(..., min_length=1)
+
+
+class SessionUpdateStateRequest(BaseModel):
+    current_topic: Optional[str] = None
+    language: Optional[str] = None
+    persona: Optional[str] = None
+

@@ -20,7 +20,18 @@ class ContextService:
         existing = self.sessions.get(session_id) or {}
         existing.update(data)
         existing.setdefault("messages", [])
+        existing.setdefault("current_topic", None)
+        existing.setdefault("language", "en")
+        existing.setdefault("persona", "default")
+        existing.setdefault("last_response", None)
         self.sessions[session_id] = existing
+
+    def update_state(self, session_id: str, key: str, value: Any) -> bool:
+        sess = self.sessions.get(session_id)
+        if not sess:
+            return False
+        sess[key] = value
+        return True
 
     def reset(self, session_id: str) -> None:
         self.sessions.pop(session_id, None)
@@ -48,3 +59,4 @@ class ContextService:
 
 
 context = ContextService()
+
