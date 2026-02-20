@@ -59,4 +59,3 @@ class ContextService:
 
 
 context = ContextService()
-
