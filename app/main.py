@@ -17,8 +17,6 @@ from app.routers.users import router as users_router
 from app.routers.voice import router as voice_router
 from app.routers.documents import router as documents_router
 
-
-
 def create_app() -> FastAPI:
     validate_configuration()
 
