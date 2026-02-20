@@ -2,7 +2,6 @@ import io
 import os
 import shutil
 from pathlib import Path
-from typing import Optional
 
 from pypdf import PdfReader
 from docx import Document
