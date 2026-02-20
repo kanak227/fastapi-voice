@@ -25,7 +25,6 @@ async def upload_document(file: UploadFile = File(...)):
 @router.get("/list")
 async def list_documents():
     # Simple list of processed documents
-    import os
     from pathlib import Path
     
     docs = []
