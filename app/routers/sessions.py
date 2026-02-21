@@ -9,7 +9,9 @@ from app.schemas.sessions import (
     SessionCreateResponse,
     SessionMessagesResponse,
     SessionStateResponse,
+    SessionUpdateStateRequest,
 )
+
 from app.services.context_service import context
 
 
@@ -51,3 +53,16 @@ async def add_message(session_id: str, body: SessionAddMessageRequest) -> Sessio
     if not ok:
         raise HTTPException(status_code=404, detail="Session not found")
     return SessionMessagesResponse(session_id=session_id, messages=context.get_messages(session_id) or [])
+
+
+@router.patch("/{session_id}", response_model=SessionStateResponse)
+async def update_session_state(session_id: str, body: SessionUpdateStateRequest) -> SessionStateResponse:
+    if not context.exists(session_id):
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    data = body.model_dump(exclude_unset=True)
+    for k, v in data.items():
+        context.update_state(session_id, k, v)
+        
+    return SessionStateResponse(session_id=session_id, state=context.get(session_id) or {})
+

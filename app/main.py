@@ -15,7 +15,7 @@ from app.routers.status import router as status_router
 from app.routers.transcripts import router as transcripts_router
 from app.routers.users import router as users_router
 from app.routers.voice import router as voice_router
-
+from app.routers.documents import router as documents_router
 
 def create_app() -> FastAPI:
     validate_configuration()
@@ -46,6 +46,8 @@ def create_app() -> FastAPI:
     application.include_router(transcripts_router)
     application.include_router(status_router)
     application.include_router(metrics_router)
+    application.include_router(documents_router)
+
 
     @application.get("/health")
     def health():
